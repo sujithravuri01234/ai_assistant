@@ -25,19 +25,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 VECTOR_STORE_DIR = BASE_DIR / "vector_store"
 
 
-class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
-    """ChromaDB embedding function using local sentence-transformers model."""
-
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        from sentence_transformers import SentenceTransformer
-
-        self._model = SentenceTransformer(model_name)
-
-    def __call__(self, input: Documents) -> Embeddings:
-        embeddings = self._model.encode(list(input), convert_to_numpy=True)
-        return embeddings.tolist()
-
-
 _chroma_client = None
 _collection = None
 
@@ -45,8 +32,8 @@ _collection = None
 def _get_collection():
     global _chroma_client, _collection
     if _collection is None:
-        model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-        ef = SentenceTransformerEmbeddingFunction(model_name=model_name)
+        from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+        ef = ONNXMiniLM_L6_V2()
         _chroma_client = chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
         _collection = _chroma_client.get_collection(
             name=COLLECTION_NAME,

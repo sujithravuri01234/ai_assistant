@@ -25,16 +25,7 @@ VECTOR_STORE_DIR = BASE_DIR / "vector_store"
 
 # ─── Local Embedding Function (sentence-transformers, no API needed) ──────────
 
-class SentenceTransformerEmbeddingFunction(EmbeddingFunction):
-    """ChromaDB embedding function using local sentence-transformers model."""
-
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        from sentence_transformers import SentenceTransformer
-        self._model = SentenceTransformer(model_name)
-
-    def __call__(self, input: Documents) -> Embeddings:
-        embeddings = self._model.encode(list(input), convert_to_numpy=True)
-        return embeddings.tolist()
+# We will use chromadb's built-in ONNX embedding function, no class definition needed here.
 
 
 def load_all_qa_data():
@@ -57,10 +48,10 @@ def build_vector_store():
     VECTOR_STORE_DIR.mkdir(exist_ok=True)
     client = chromadb.PersistentClient(path=str(VECTOR_STORE_DIR))
 
-    # Use local sentence-transformers embedding function
-    model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-    print(f"[*] Loading embedding model: {model_name} (local, no API needed)")
-    ef = SentenceTransformerEmbeddingFunction(model_name=model_name)
+    # Use ChromaDB's built-in ONNX embedding function
+    from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+    print("[*] Loading embedding model: all-MiniLM-L6-v2 (ONNX local, lightweight)")
+    ef = ONNXMiniLM_L6_V2()
 
     # Delete and recreate collection for fresh build
     try:
